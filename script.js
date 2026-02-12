@@ -21,11 +21,29 @@ function elapsed() {
   return Math.floor((Date.now() - startTime) / 1000);
 }
 
-// ---------------- VERB CHECK ----------------
+// ---------------- IMPROVED VERB DETECTION ----------------
 
-function hasVerb(answer) {
-  return /\b(es|soy|eres|somos|son|está|estoy|fui|era|eran|hay|había|voy|vas|van|iré|tiene|tengo|tienes)\b/i
-    .test(answer);
+function hasVerb(answer, lang) {
+
+  const lower = answer.toLowerCase();
+
+  if (lang === "es") {
+    return /\b(soy|eres|es|somos|son|estoy|está|están|era|eran|fui|fue|hay|había|voy|vas|van|iré|tengo|tiene|tienen|juego|juegas|juega|jugamos|como|comes|come|salgo|sales|sale|hago|haces|hace|veo|ves|vive|vivo|vives)\b/.test(lower);
+  }
+
+  if (lang === "fr") {
+    return /\b(suis|es|est|sommes|sont|ai|as|a|vais|va|mange|manges|joue|joues|habite|habites)\b/.test(lower);
+  }
+
+  if (lang === "de") {
+    return /\b(bin|bist|ist|sind|habe|hast|hat|gehe|geht|spiele|spielst|mache|macht|wohne|wohnst)\b/.test(lower);
+  }
+
+  if (lang === "ga") {
+    return /\b(tá|bhí|bheidh|táim|táimid)\b/.test(lower);
+  }
+
+  return false;
 }
 
 // ---------------- SCAFFOLD ----------------
@@ -35,37 +53,35 @@ function scaffold(task) {
   if (t.includes("town")) return "Mi pueblo es pequeño y tranquilo.";
   if (t.includes("house")) return "Mi casa es pequeña y está en el centro.";
   if (t.includes("subject")) return "Mi asignatura favorita es interesante.";
-  if (t.includes("weekend")) return "El fin de semana fui al cine con mis amigos.";
+  if (t.includes("weekend")) return "El fin de semana juego al fútbol con mis amigos.";
   if (t.includes("family")) return "Mi madre es simpática.";
   return "Mi amigo es simpático.";
 }
 
 // ---------------- STRUCTURE GATE ----------------
 
-function structuralGate(answer, task) {
+function structuralGate(answer, task, lang) {
+
   const wc = answer.trim().split(/\s+/).length;
 
   if (wc < 2) {
     return {
       score: 2,
-      focus: "Start stronger",
-      feedback: "Give me a full sentence. Try: " + scaffold(task)
+      feedback: "Start with a full sentence. Example: " + scaffold(task)
     };
   }
 
-  if (!hasVerb(answer)) {
+  if (!hasVerb(answer, lang)) {
     return {
       score: 3,
-      focus: "Verb missing",
-      feedback: "You need a verb to make this work. Example: " + scaffold(task)
+      feedback: "You need a clear verb. Example: " + scaffold(task)
     };
   }
 
   if (wc < 5) {
     return {
       score: 4,
-      focus: "Too short",
-      feedback: "You're communicating — now expand it with one clear detail."
+      feedback: "You're communicating. Now add ONE more specific detail."
     };
   }
 
@@ -80,6 +96,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const ans = document.getElementById("answer");
   const out = document.getElementById("out");
   const taskEl = document.getElementById("task");
+  const langEl = document.getElementById("lang");
 
   function newPrompt() {
     currentPrompt = PROMPTS[Math.floor(Math.random() * PROMPTS.length)];
@@ -95,11 +112,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const answer = ans.value.trim();
     if (!answer) return;
 
+    const lang = langEl.value;
+
     out.classList.remove("hidden");
     out.innerHTML = "Thinking…";
 
     let result;
-    const gate = structuralGate(answer, currentPrompt);
+    const gate = structuralGate(answer, currentPrompt, lang);
 
     if (gate) {
       result = gate;
@@ -107,7 +126,7 @@ document.addEventListener("DOMContentLoaded", () => {
       result = await window.classifyAnswer({
         task: currentPrompt,
         answer,
-        lang: document.getElementById("lang").value
+        lang
       });
     }
 
@@ -119,44 +138,45 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function renderFeedback(result) {
 
-    const progress = Math.round((round / CONFIG.ROUNDS) * 100);
-
     out.innerHTML = `
       <div><strong>Round ${round}/${CONFIG.ROUNDS}</strong></div>
+      <div style="font-size:1.3rem;margin:6px 0;"><strong>${result.score}/10</strong></div>
 
-      <div style="height:10px;background:#ddd;border-radius:20px;margin:6px 0;">
-        <div style="height:10px;background:#003366;width:${progress}%;border-radius:20px;"></div>
-      </div>
-
-      <div style="font-size:1.2rem;"><strong>${result.score}/10</strong></div>
-
-      <div style="margin-top:6px;font-size:1.05rem;">
+      <div style="margin-top:6px;font-size:1.1rem;">
         ${
           result.score <= 4 ? "We build from here." :
-          result.score <= 6 ? "You're communicating. Now sharpen it." :
-          result.score <= 8 ? "Strong answer. Push it higher." :
-          "That’s excellent control."
+          result.score <= 6 ? "You're getting there." :
+          result.score <= 8 ? "Strong answer." :
+          "Excellent work."
         }
       </div>
 
-      <div style="margin-top:6px;">${result.feedback}</div>
+      <div style="margin-top:6px;">
+        ${result.feedback}
+      </div>
 
       <div style="margin-top:12px;">
         <button id="nextBtn">Next</button>
       </div>
 
-      <div class="teacherBar">
+      <div class="teacherBar" style="margin-top:8px;">
         <button data-v="clear">👍 Clear</button>
         <button data-v="unclear">🔁 Could be clearer</button>
         <button data-v="bad">❌ Not helpful</button>
       </div>
     `;
 
-    out.querySelectorAll(".teacherBar button").forEach(btn => {
-      btn.onclick = () => {
-        console.log("TEACHER_FEEDBACK", { result, rating: btn.dataset.v });
+    // FIXED teacher buttons
+    document.querySelectorAll(".teacherBar button").forEach(btn => {
+      btn.addEventListener("click", () => {
+        console.log("TEACHER_FEEDBACK", {
+          score: result.score,
+          feedback: result.feedback,
+          rating: btn.dataset.v
+        });
         btn.disabled = true;
-      };
+        btn.innerText = "✓";
+      });
     });
 
     document.getElementById("nextBtn").onclick = () => {
@@ -182,34 +202,32 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (avg <= 4) {
       title = "Foundations Mode";
-      message = "You're building structure. Focus on verbs and full sentences.";
+      message = "Focus on verbs and full sentences next round.";
       colour = "#8b0000";
     }
     else if (avg <= 6) {
-      title = "Solid Communicator";
-      message = "Add sharper detail and precision.";
+      title = "Building Momentum";
+      message = "Add precision and sharper detail.";
       colour = "#b8860b";
     }
     else if (avg <= 8) {
       title = "Strong Performance";
-      message = "Exam-level writing. Polish accuracy.";
+      message = "Exam-ready writing. Polish small errors.";
       colour = "#1e90ff";
     }
     else {
       title = "Turbo Level";
-      message = "Excellent control. Compete on time now.";
+      message = "Outstanding control. Now beat your time.";
       colour = "#006400";
     }
 
     out.innerHTML = `
       <hr>
       <h2 style="color:${colour};">${title}</h2>
-      <div style="font-size:1.3rem;margin:10px 0;">
-        Average: ${avg}/10
-      </div>
+      <div style="font-size:1.4rem;margin:8px 0;">Average: ${avg}/10</div>
       <div>Time: ${time}s</div>
-      <div style="margin-top:8px;">Scores: ${scores.join(" → ")}</div>
-      <p style="margin-top:12px;">${message}</p>
+      <div>Scores: ${scores.join(" → ")}</div>
+      <p style="margin-top:10px;">${message}</p>
       <button id="playAgain">Play Again</button>
     `;
 
