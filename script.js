@@ -1,6 +1,5 @@
 // ==============================
-// TURBO COACH — STABLE HYBRID
-// JC aligned — Growth Model B
+// TURBO COACH — FINAL STABLE BUILD
 // ==============================
 
 const CONFIG = { ROUNDS: 3 };
@@ -30,32 +29,52 @@ function elapsed() {
 // ---------------- VERB CHECK ----------------
 
 function hasVerb(answer) {
-  return /\b(es|soy|eres|somos|está|estoy|estuve|fui|era|hay|había|iré|voy|vas|van|fue|eran|tiene|tengo|tienes)\b/i
+  return /\b(es|soy|eres|somos|son|está|estoy|estuve|fui|era|eran|hay|había|iré|voy|vas|van|fue|tiene|tengo|tienes)\b/i
     .test(answer);
 }
 
-// ---------------- STRUCTURAL GATE ----------------
-// ONLY blocks communication failures
+// ---------------- TASK SCAFFOLD ----------------
 
-function structuralGate(answer) {
+function scaffoldExample(task) {
+
+  const t = task.toLowerCase();
+
+  if (t.includes("town"))
+    return "Mi pueblo es pequeño y tranquilo.";
+  if (t.includes("house"))
+    return "Mi casa es pequeña y está en el centro.";
+  if (t.includes("subject"))
+    return "Mi asignatura favorita es matemática porque es interesante.";
+  if (t.includes("weekend"))
+    return "El fin de semana fui al cine con mis amigos.";
+  if (t.includes("family"))
+    return "Mi madre es simpática y trabaja en un hospital.";
+  if (t.includes("friend"))
+    return "Mi amigo es alto y simpático.";
+
+  return "Es una frase completa y clara.";
+}
+
+// ---------------- STRUCTURAL GATE ----------------
+// ONLY blocks communication failure
+
+function structuralGate(answer, task) {
 
   const wc = answer.trim().split(/\s+/).length;
 
   if (wc < 2) {
     return {
-      cap: 3,
+      score: 2,
       focus: "Fragment",
-      feedback:
-        "That’s not a sentence yet. Make it a full idea. For example: **Mi pueblo es pequeño.**"
+      feedback: "That’s not a sentence yet. Try something like: **" + scaffoldExample(task) + "**"
     };
   }
 
   if (!hasVerb(answer)) {
     return {
-      cap: 3,
+      score: 3,
       focus: "Missing verb",
-      feedback:
-        "Make it a sentence. Add a verb: **es**, **hay**, **fui**, **voy**."
+      feedback: "Make it a full sentence. For example: **" + scaffoldExample(task) + "**"
     };
   }
 
@@ -68,7 +87,9 @@ function renderRound(result) {
 
   const progress = Math.round((round / CONFIG.ROUNDS) * 100);
 
-  document.getElementById("out").innerHTML = `
+  const out = document.getElementById("out");
+
+  out.innerHTML = `
     <div><strong>Round ${round}/${CONFIG.ROUNDS}</strong></div>
 
     <div style="height:12px;background:#ddd;border-radius:20px;margin:8px 0;">
@@ -78,7 +99,25 @@ function renderRound(result) {
     <div><strong>Score:</strong> ${result.score}/10</div>
     <div><strong>Focus:</strong> ${result.focus}</div>
     <div><strong>Coach:</strong> ${result.feedback}</div>
+
+    <div class="teacherBar" style="margin-top:10px;">
+      <button data-v="clear">👍 Clear</button>
+      <button data-v="unclear">🔁 Could be clearer</button>
+      <button data-v="bad">❌ Not helpful</button>
+    </div>
   `;
+
+  // Teacher logging
+  out.querySelectorAll(".teacherBar button").forEach(btn => {
+    btn.onclick = () => {
+      console.log("TEACHER_FEEDBACK", {
+        answer: document.getElementById("answer").value,
+        result,
+        rating: btn.dataset.v
+      });
+      btn.disabled = true;
+    };
+  });
 }
 
 // ---------------- SUMMARY ----------------
@@ -89,15 +128,27 @@ function renderSummary() {
   const time = elapsed();
 
   let verdict = "";
+  let colour = "#444";
 
-  if (avg <= 4) verdict = "Foundations Phase";
-  else if (avg <= 6) verdict = "Building Control";
-  else if (avg <= 8) verdict = "Strong Performance";
-  else verdict = "Exam Level";
+  if (avg <= 4) {
+    verdict = "Foundations Phase";
+    colour = "#8b0000";
+  } else if (avg <= 6) {
+    verdict = "Building Control";
+    colour = "#b8860b";
+  } else if (avg <= 8) {
+    verdict = "Strong Performance";
+    colour = "#1e90ff";
+  } else {
+    verdict = "Exam Level";
+    colour = "#006400";
+  }
 
-  document.getElementById("out").innerHTML += `
+  const out = document.getElementById("out");
+
+  out.innerHTML += `
     <hr>
-    <h3>${verdict}</h3>
+    <h3 style="color:${colour};">${verdict}</h3>
 
     <div style="font-size:1.2rem;margin:8px 0;">
       Average: ${avg}/10
@@ -105,7 +156,21 @@ function renderSummary() {
 
     <div>Time: ${time}s</div>
     <div>Round scores: ${scores.join(" → ")}</div>
+
+    <button id="playAgain" style="margin-top:12px;">Play Again</button>
   `;
+
+  document.getElementById("playAgain").onclick = () => {
+    round = 0;
+    scores = [];
+    focuses = [];
+    startTime = null;
+    currentPrompt = PROMPTS[Math.floor(Math.random()*PROMPTS.length)];
+    document.getElementById("taskBox").innerText = "Task: " + currentPrompt;
+    document.getElementById("answer").value = "";
+    document.getElementById("out").classList.add("hidden");
+    document.getElementById("answer").focus();
+  };
 }
 
 // ---------------- MAIN ----------------
@@ -131,25 +196,18 @@ document.addEventListener("DOMContentLoaded", () => {
     out.innerHTML = "Thinking…";
 
     // STRUCTURAL GATE FIRST
-    const gate = structuralGate(answer);
+    const gate = structuralGate(answer, currentPrompt);
 
     let result;
 
     if (gate) {
-      result = {
-        score: gate.cap,
-        focus: gate.focus,
-        feedback: gate.feedback
-      };
+      result = gate;
     } else {
-
-      // AI layer handles nuance
       const ai = await window.classifyAnswer({
         task: currentPrompt,
         answer: answer,
         lang: "es"
       });
-
       result = ai;
     }
 
