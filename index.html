@@ -12,21 +12,13 @@
 
   <h1>Turbo Coach</h1>
 
-  <div class="hud">
-    <div class="hudBox"><span id="roundHud">Round 0/0</span></div>
-    <div class="hudBox"><span id="timerHud">Time: 0s</span></div>
+  <div class="taskBox">
+    <strong>Task:</strong>
+    <span id="task"></span>
   </div>
 
-  <!-- TASK DISPLAY -->
-  <div id="taskBox" class="taskBox"></div>
+  <textarea id="answer" placeholder="Write your answer here..."></textarea>
 
-  <!-- ANSWER AREA -->
-  <textarea
-    id="answer"
-    placeholder="Write your answer here..."
-  ></textarea>
-
-  <!-- CONTROLS -->
   <div class="controls">
     <select id="lang">
       <option value="es">Spanish</option>
@@ -38,7 +30,6 @@
     <button id="runBtn">Submit</button>
   </div>
 
-  <!-- OUTPUT -->
   <section id="out" class="card hidden"></section>
 
 </main>
