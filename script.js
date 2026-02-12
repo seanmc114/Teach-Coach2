@@ -1,5 +1,5 @@
 // ==============================
-// TURBO COACH — FULL STABLE BUILD
+// TURBO COACH — GAME BUILD v2
 // ==============================
 
 const CONFIG = { ROUNDS: 3 };
@@ -75,31 +75,37 @@ document.addEventListener("DOMContentLoaded", () => {
     renderFeedback(result);
   };
 
-  // ---------------- FEEDBACK ----------------
+  // ---------------- ROUND FEEDBACK ----------------
 
   function renderFeedback(result) {
+
+    const progressWidth = (round / CONFIG.ROUNDS) * 100;
 
     let tone;
 
     if (result.score <= 3)
       tone = "We build from here.";
     else if (result.score <= 5)
-      tone = "You're communicating — now tighten it.";
+      tone = "You're communicating. Now tighten it.";
     else if (result.score <= 7)
-      tone = "Solid work. Let’s sharpen it.";
+      tone = "Solid work. Sharpen one thing.";
     else if (result.score <= 9)
-      tone = "Strong answer. Very close to top band.";
+      tone = "Strong answer. Nearly top band.";
     else
-      tone = "Outstanding. That’s exam control.";
+      tone = "Outstanding control.";
 
     out.innerHTML = `
       <div><strong>Round ${round}/${CONFIG.ROUNDS}</strong></div>
 
-      <div style="font-size:1.8rem;margin:8px 0;">
+      <div style="height:10px;background:#ddd;border-radius:20px;margin:6px 0;">
+        <div style="height:10px;background:#003366;width:${progressWidth}%;border-radius:20px;"></div>
+      </div>
+
+      <div style="font-size:2rem;margin:10px 0;font-weight:bold;">
         ${result.score}/10
       </div>
 
-      <div style="font-size:1.1rem;margin-bottom:8px;">
+      <div style="font-size:1.05rem;margin-bottom:10px;">
         ${tone}
       </div>
 
@@ -116,7 +122,7 @@ document.addEventListener("DOMContentLoaded", () => {
       </div>
     `;
 
-    // Teacher feedback logging
+    // Teacher logging
     document.querySelectorAll(".teacherBar button").forEach(btn => {
       btn.onclick = () => {
         console.log("TEACHER_FEEDBACK", {
@@ -141,61 +147,81 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   }
 
-  // ---------------- SUMMARY ----------------
+  // ---------------- FINAL SUMMARY ----------------
 
   function renderSummary() {
 
     const avg = Math.round(scores.reduce((a,b)=>a+b,0)/scores.length);
     const time = elapsed();
 
-    let title, message, emoji, colour;
+    const min = Math.min(...scores);
+    const max = Math.max(...scores);
+    const improving = scores[2] > scores[0];
+
+    let emoji, title, message, colour;
 
     if (avg <= 4) {
       emoji = "🟥";
-      title = "Foundations Mode";
-      message = "Structure first. Clear verbs. Clear sentences.";
       colour = "#8b0000";
+      title = "Foundations Mode";
+      message = improving
+        ? "You improved this round. Lock in verbs next."
+        : "Structure blocked you. Fix verbs first.";
     }
     else if (avg <= 6) {
       emoji = "🟨";
-      title = "Momentum Building";
-      message = "You’re communicating. Now refine accuracy.";
       colour = "#b8860b";
+      title = "Building Momentum";
+      message = max >= 7
+        ? "You reached strong moments. Make it consistent."
+        : "Add sharper detail and precision.";
     }
     else if (avg <= 8) {
       emoji = "🟦";
-      title = "Strong Performance";
-      message = "Exam-level writing. Polish the edges.";
       colour = "#1e90ff";
+      title = "Strong Performance";
+      message = "Small accuracy upgrades push you higher.";
     }
     else {
       emoji = "🟩";
-      title = "Turbo Level";
-      message = "That’s serious control. Beat your time next round.";
       colour = "#006400";
+      title = "Turbo Level";
+      message = "Serious control. Beat your time next.";
     }
+
+    const bar1 = "█".repeat(scores[0]);
+    const bar2 = "█".repeat(scores[1]);
+    const bar3 = "█".repeat(scores[2]);
+
+    const trend = improving ? "⬆ Improving" :
+                  scores[2] === scores[0] ? "➡ Stable" :
+                  "⬇ Dropped";
 
     out.innerHTML = `
       <hr>
-      <h2 style="color:${colour};">
+
+      <h2 style="color:${colour};font-size:1.9rem;">
         ${emoji} ${title}
       </h2>
 
-      <div style="font-size:1.6rem;margin:10px 0;">
-        ${avg}/10 Average
+      <div style="font-size:2.3rem;font-weight:bold;margin:8px 0;">
+        ${avg}/10
       </div>
 
       <div>Time: ${time}s</div>
+      <div style="margin-top:6px;font-weight:600;">${trend}</div>
 
-      <div style="margin-top:8px;">
-        Scores: ${scores.join(" → ")}
+      <div style="margin-top:10px;text-align:left;">
+        Round 1: ${bar1} (${scores[0]})<br>
+        Round 2: ${bar2} (${scores[1]})<br>
+        Round 3: ${bar3} (${scores[2]})
       </div>
 
-      <p style="margin-top:14px;font-size:1.05rem;">
+      <p style="margin-top:14px;font-size:1.1rem;font-weight:500;">
         ${message}
       </p>
 
-      <button id="playAgain" style="margin-top:10px;">
+      <button id="playAgain" style="margin-top:12px;">
         Play Again
       </button>
     `;
