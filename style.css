@@ -1,0 +1,132 @@
+/* ==============================
+   TURBO COACH — ATMOSPHERIC EDITION
+   ============================== */
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", Arial, sans-serif;
+  background: linear-gradient(135deg, #e8eef8, #f5f9ff);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* -------- STRONGER WATERMARK -------- */
+
+body::before {
+  content: "";
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 650px;
+  height: 650px;
+  transform: translate(-50%, -50%);
+  background: url("./crest.png") no-repeat center center;
+  background-size: contain;
+  opacity: 0.14;   /* stronger */
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* -------- MAIN WRAP -------- */
+
+.wrap {
+  position: relative;
+  z-index: 1;
+  width: 92%;
+  max-width: 1100px;
+  margin: 60px auto;
+  padding: 40px;
+}
+
+/* -------- TASK -------- */
+
+.taskBox {
+  font-size: 1.2rem;
+  margin-bottom: 20px;
+  padding: 18px 24px;
+  background: rgba(255,255,255,0.75);
+  backdrop-filter: blur(6px);
+  border-radius: 22px;
+}
+
+/* -------- TEXTAREA -------- */
+
+textarea {
+  width: 100%;
+  font-size: 1.25rem;
+  padding: 22px;
+  border-radius: 24px;
+  border: 1px solid #d6e0ef;
+  resize: vertical;
+  min-height: 160px;
+  margin-bottom: 25px;
+  background: rgba(255,255,255,0.75);
+  backdrop-filter: blur(6px);
+  box-shadow: inset 0 3px 10px rgba(0,0,0,0.05);
+}
+
+textarea:focus {
+  outline: none;
+  border-color: #3366cc;
+  box-shadow: 0 0 0 4px rgba(51,102,204,0.2);
+}
+
+/* -------- CONTROLS -------- */
+
+.controls {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 35px;
+}
+
+select, button {
+  font-size: 1rem;
+  padding: 12px 18px;
+  border-radius: 18px;
+  border: 1px solid #d0d8e5;
+  cursor: pointer;
+}
+
+button {
+  background: #003366;
+  color: white;
+  border: none;
+  transition: 0.2s ease;
+}
+
+button:hover {
+  background: #004a99;
+}
+
+/* -------- RESULT CARD -------- */
+
+.card {
+  padding: 28px;
+  border-radius: 26px;
+  background: rgba(255,255,255,0.8);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 8px 28px rgba(0,0,0,0.08);
+  margin-top: 20px;
+}
+
+.hidden {
+  display: none;
+}
+
+/* -------- FOOTER -------- */
+
+footer {
+  margin-top: auto;
+  text-align: center;
+  padding: 25px 0;
+  font-size: 0.9rem;
+  color: #444;
+}
+
+
+/* -------- HUD -------- */
+.hud{display:flex;justify-content:space-between;gap:12px;align-items:center;margin:10px 0 18px;}
+.hudBox{flex:1;padding:12px 16px;background:rgba(255,255,255,0.7);backdrop-filter:blur(6px);border-radius:18px;font-weight:600;}
+.hudBox small{font-weight:500;opacity:.75}
