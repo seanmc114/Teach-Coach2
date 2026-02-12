@@ -5,7 +5,6 @@ body {
   position:relative;
 }
 
-/* Crest watermark */
 body::before {
   content:"";
   position:fixed;
@@ -74,13 +73,7 @@ button:hover {
   margin-top:15px;
 }
 
-.hidden {
-  display:none;
-}
-
-.teacherBar {
-  margin-top:10px;
-}
+.hidden { display:none; }
 
 .teacherBar button {
   margin-right:6px;
