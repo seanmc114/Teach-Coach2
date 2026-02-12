@@ -32,9 +32,16 @@ h1 {
   margin-bottom:20px;
 }
 
+.taskBox {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:12px;
+}
+
 textarea {
   width:100%;
-  min-height:130px;
+  min-height:140px;
   padding:15px;
   font-size:1rem;
   border-radius:14px;
@@ -47,6 +54,7 @@ textarea {
   display:flex;
   gap:10px;
   margin-bottom:15px;
+  flex-wrap:wrap;
 }
 
 select, button {
@@ -64,6 +72,12 @@ button {
 
 button:hover {
   background:#0052a3;
+}
+
+.smallBtn {
+  padding:6px 10px;
+  font-size:0.9rem;
+  background:#666;
 }
 
 .card {
